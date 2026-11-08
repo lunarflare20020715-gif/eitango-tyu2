@@ -1845,5 +1845,14 @@
     window.DEFAULT_GAS_URL = TARGET_GAS_URL;
   })();
 </script>
+<script>
+  (function() {
+    const M2_URL = "https://script.google.com/macros/s/AKfycbx_xJyCmlTJLuXoq4R_QrbCKdI5XTAmEc6a7KWJEyeJP-UBfEjOCP8fvqaddQPOd7iG/exec";
+    try {
+      localStorage.setItem('m2_gas_url', M2_URL);
+      localStorage.setItem('gas_url', M2_URL);
+    } catch(e) {}
+  })();
+</script>
 </body>
 </html>
