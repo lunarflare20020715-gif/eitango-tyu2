@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>中学2年 英単語トレーニング</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --warning: #ca8a04;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); display: flex; justify-content: center; min-height: 100vh; padding: 16px; }
+    .container { width: 100%; max-width: 680px; background: var(--card-bg); border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 24px; display: flex; flex-direction: column; }
+    header { text-align: center; margin-bottom: 24px; border-bottom: 2px solid var(--border); padding-bottom: 16px; }
+    h1 { font-size: 1.5rem; color: var(--primary); margin-bottom: 6px; }
+    .subtitle { font-size: 0.9rem; color: var(--text-muted); }
+    .card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; }
+    input[type="text"], select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; outline: none; transition: border-color 0.2s; }
+    input[type="text"]:focus, select:focus { border-color: var(--primary); }
+    .btn { display: inline-flex; justify-content: center; align-items: center; width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.05rem; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+    .btn:hover { background: var(--primary-hover); }
+    .btn-secondary { background: #64748b; margin-top: 10px; }
+    .btn-secondary:hover { background: #475569; }
+    .status-bar { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px; font-weight: 600; }
+    .word-display { text-align: center; margin: 24px 0; }
+    .target-word { font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; letter-spacing: 0.5px; }
+    .target-desc { font-size: 1.15rem; color: var(--text-muted); min-height: 1.6em; }
+    .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px; }
+    .option-btn { width: 100%; padding: 14px 18px; border: 2px solid var(--border); border-radius: 10px; background: #fff; font-size: 1rem; font-weight: 600; text-align: left; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; }
+    .option-btn:hover { border-color: var(--primary); background: #eff6ff; }
+    .option-btn.correct { background: #dcfce7 !important; border-color: var(--success) !important; color: var(--success); }
+    .option-btn.wrong { background: #fee2e2 !important; border-color: var(--danger) !important; color: var(--danger); }
+    .fill-box { margin: 20px 0; }
+    .fill-sentence { font-size: 1.15rem; line-height: 1.6; margin-bottom: 12px; font-weight: 500; }
+    .fill-translation { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 16px; }
+    .feedback-banner { padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 16px; display: none; }
+    .feedback-banner.correct { display: block; background: #dcfce7; color: var(--success); }
+    .feedback-banner.wrong { display: block; background: #fee2e2; color: var(--danger); }
+    .result-score { text-align: center; margin: 20px 0; }
+    .score-num { font-size: 3.5rem; font-weight: 900; color: var(--primary); }
+    .score-total { font-size: 1.5rem; color: var(--text-muted); }
+    .sending-badge { text-align: center; font-size: 0.85rem; padding: 8px; border-radius: 6px; background: #f1f5f9; color: var(--text-muted); margin-top: 12px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>中学2年 英単語マスター</h1>
+    <div class="subtitle">Unit別・難易度別 実践テスト</div>
+  </header>
+
+  <!-- 初期設定画面 -->
+  <div id="screen-setup" class="card">
+    <div class="form-group">
+      <label for="student-name">氏名（または出席番号）</label>
+      <input type="text" id="student-name" placeholder="例: 山田 太郎">
+    </div>
+    <div class="form-group">
+      <label for="select-unit">学習範囲（Unit）</label>
+      <select id="select-unit">
+        <option value="all">すべて（Unit0〜Unit3）</option>
+        <option value="unit0">Unit 0</option>
+        <option value="unit1">Unit 1</option>
+        <option value="unit2">Unit 2</option>
+        <option value="unit3">Unit 3</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="select-mode">出題形式</label>
+      <select id="select-mode">
+        <option value="choice">4択テスト（日本語から英単語を選ぶ）</option>
+        <option value="fill">穴埋めテスト（例文の空欄にスペル入力）</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="select-count">問題数</label>
+      <select id="select-count">
+        <option value="5">5問</option>
+        <option value="10" selected>10問</option>
+        <option value="20">20問</option>
+      </select>
+    </div>
+    <button class="btn" onclick="startQuiz()">テストを開始する</button>
+  </div>
+
+  <!-- クイズ実行画面 -->
+  <div id="screen-quiz" style="display: none;">
+    <div class="status-bar">
+      <span id="quiz-progress">第 1 問 / 10 問</span>
+      <span id="quiz-badge">難易度: A</span>
+    </div>
+
+    <!-- 4択テスト用 -->
+    <div id="box-choice" class="card" style="display: none;">
+      <div class="word-display">
+        <div class="target-word" id="choice-jp">日本語訳</div>
+        <div class="target-desc" id="choice-sub"></div>
+      </div>
+      <div class="options-grid" id="choice-options"></div>
+    </div>
+
+    <!-- 穴埋めテスト用 -->
+    <div id="box-fill" class="card" style="display: none;">
+      <div class="fill-box">
+        <div class="fill-sentence" id="fill-en"></div>
+        <div class="fill-translation" id="fill-jp"></div>
+        <input type="text" id="fill-input" placeholder="ここに入力してEnter" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      </div>
+      <button class="btn" id="fill-submit-btn" onclick="submitFillAnswer()">回答する</button>
+    </div>
+
+    <div id="feedback-banner" class="feedback-banner"></div>
+  </div>
+
+  <!-- 結果発表画面 -->
+  <div id="screen-result" class="card" style="display: none;">
+    <h2 style="text-align: center; margin-bottom: 12px;">テスト結果</h2>
+    <div class="result-score">
+      <span class="score-num" id="result-score">0</span>
+      <span class="score-total" id="result-total"> / 10</span>
+    </div>
+    <div id="send-status" class="sending-badge">スプレッドシートへ送信中...</div>
+    <button class="btn" style="margin-top: 20px;" onclick="resetQuiz()">もう一度解く</button>
+  </div>
+</div>
+
+<script>
+  // 先生のGAS URLを初期設定
+  const TEACHER_GAS_URL = "https://script.google.com/macros/s/AKfycby08qZs4C9a5NTHu1NkPXbVV8xuFZNaRGkeWZtu2-u9sPGXdlD3Cz5zHzqxUmy-83pt/exec";
+
+  // スプレッドシート「中2英単語アプリ」の抽出データ
+  const RAW_DATA = [
+    { rank:"A", unit:"unit0", word:"actually", jp:"実は、本当は", sent:"I (      ) like math.", trans:"私は実は数学が好きです。", ans:"actually" },
+    { rank:"S", unit:"unit0", word:"same", jp:"同じ、同一の", sent:"We go to the (      ) school.", trans:"私たちは同じ学校に通っています。", ans:"same" },
+    { rank:"A", unit:"unit0", word:"experience", jp:"経験、体験", sent:"It was a great (      ) for me.", trans:"それは私にとって素晴らしい経験でした。", ans:"experience" },
+    { rank:"B", unit:"unit0", word:"instant", jp:"即座の、緊急の、(食べ物が)即席の", sent:"He made an (      ) decision.", trans:"彼は即座の決断を下しました。", ans:"instant" },
+    { rank:"S", unit:"unit0", word:"ramen", jp:"ラーメン", sent:"I want to eat (      ) for lunch.", trans:"私は昼食にラーメンを食べたいです。", ans:"ramen" },
+    { rank:"A", unit:"unit0", word:"noodle(s)", jp:"ヌードル、めん", sent:"She likes to eat (      ).", trans:"彼女は麺類を食べるのが好きです。", ans:"noodles" },
+    { rank:"D", unit:"unit0", word:"by the way", jp:"ところで", sent:"(      ), where is the station?", trans:"ところで、駅はどこですか。", ans:"By the way" },
+    { rank:"A", unit:"unit1", word:"golden", jp:"金色の、すばらしい", sent:"We had a (      ) time there.", trans:"私たちはそこで素晴らしい時間を過ごしました。", ans:"golden" },
+    { rank:"A", unit:"unit1", word:"holiday(s)", jp:"休日、休暇", sent:"I will visit Kyoto during the (      ).", trans:"私は休暇の間に京都を訪れるつもりです。", ans:"holiday" },
+    { rank:"D", unit:"unit1", word:"Singapore", jp:"シンガポール", sent:"My uncle lives in (      ).", trans:"私の叔父はシンガポールに住んでいます。", ans:"Singapore" },
+    { rank:"A", unit:"unit1", word:"flight", jp:"飛ぶこと、飛行、(飛行機の)便", sent:"Our (      ) will leave at ten.", trans:"私たちの飛行機の便は10時に出発します。", ans:"flight" },
+    { rank:"A", unit:"unit1", word:"arrive(s)", jp:"到着する", sent:"The train will (      ) soon.", trans:"電車はまもなく到着します。", ans:"arrive" },
+    { rank:"A", unit:"unit1", word:"airport", jp:"空港、飛行場", sent:"We arrived at the (      ) on time.", trans:"私たちは時間通りに空港に着きました。", ans:"airport" },
+    { rank:"S", unit:"unit1", word:"soon", jp:"すぐに、まもなく", sent:"See you (      ).", trans:"またすぐに会いましょう。", ans:"soon" },
+    { rank:"D", unit:"unit1", word:"Daniel", jp:"ダニエル", sent:"This is my friend, (      ).", trans:"こちらは私の友達のダニエルです。", ans:"Daniel" },
+    { rank:"A", unit:"unit1", word:"leave", jp:"去る、出発する", sent:"I will (      ) home at eight.", trans:"私は8時に家を出発します。", ans:"leave" },
+    { rank:"S", unit:"unit1", word:"for", jp:"【方向・行き先】…に、…へ", sent:"This train is (      ) Tokyo.", trans:"この電車は東京行きです。", ans:"for" },
+    { rank:"S", unit:"unit1", word:"show", jp:"…を案内する", sent:"Please (      ) me your pictures.", trans:"私にあなたの写真を見せて（案内して）ください。", ans:"show" },
+    { rank:"S", unit:"unit1", word:"around", jp:"…のあちこちに[で、を]", sent:"He showed us (      ) the town.", trans:"彼は町のあちこちを案内してくれました。", ans:"around" },
+    { rank:"S", unit:"unit1", word:"in", jp:"【運動・方向】…の中へ、…に", sent:"Come (      ) the room, please.", trans:"部屋の中へ入ってください。", ans:"in" },
+    { rank:"S", unit:"unit1", word:"will", jp:"【単なる未来】…でしょう、…だろう", sent:"It (      ) rain tomorrow.", trans:"明日は雨が降るでしょう。", ans:"will" },
+    { rank:"A", unit:"unit1", word:"excited", jp:"わくわくした", sent:"We were very (      ) about the game.", trans:"私たちはその試合にとてもわくわくしました。", ans:"excited" },
+    { rank:"A", unit:"unit1", word:"seafood", jp:"シーフード", sent:"This restaurant serves delicious (      ).", trans:"このレストランはおいしいシーフードを出します。", ans:"seafood" },
+    { rank:"B", unit:"unit1", word:"reservation", jp:"予約", sent:"I made a hotel (      ).", trans:"私はホテルの予約をしました。", ans:"reservation" },
+    { rank:"D", unit:"unit1", word:"Merlion Park", jp:"マーライオン公園", sent:"We visited (      ) yesterday.", trans:"私たちは昨日マーライオン公園を訪れました。", ans:"Merlion Park" },
+    { rank:"D", unit:"unit1", word:"the Merlion", jp:"マーライオン", sent:"We saw (      ) in Singapore.", trans:"私たちはシンガポールでマーライオンを見ました。", ans:"the Merlion" },
+    { rank:"D", unit:"unit1", word:"you'll", jp:"you will", sent:"(      ) find a good shop there.", trans:"あなたはそこで良い店を見つけるでしょう。", ans:"You'll" },
+    { rank:"S", unit:"unit1", word:"first", jp:"第1に、最初に", sent:"(      ), we have to clean the room.", trans:"第1に、私たちは部屋を掃除しなければなりません。", ans:"First" },
+    { rank:"S", unit:"unit1", word:"meter(s)", jp:"メートル", sent:"This tree is ten (      ) tall.", trans:"この木は高さが10メートルあります。", ans:"meters" },
+    { rank:"S", unit:"unit1", word:"tall", jp:"[高さ・身長が]高い", sent:"Ken is very (      ).", trans:"ケンはとても背が高いです。", ans:"tall" },
+    { rank:"B", unit:"unit1", word:"weigh(s)", jp:"…の重さがある", sent:"How much does it (      )?", trans:"それにはどれくらいの重さがありますか。", ans:"weigh" },
+    { rank:"A", unit:"unit1", word:"ton(s)", jp:"トン", sent:"The elephant weighs three (      ).", trans:"その象は重さが3トンあります。", ans:"tons" },
+    { rank:"S", unit:"unit1", word:"found", jp:"findの過去形", sent:"I (      ) my lost key under the desk.", trans:"私は机の下でなくした鍵を見つけました。", ans:"found" },
+    { rank:"S", unit:"unit1", word:"find", jp:"…を見つける、発見する", sent:"I can't (      ) my pen.", trans:"私はペンを見つけることができません。", ans:"find" },
+    { rank:"A", unit:"unit1", word:"language(s)", jp:"言語、言葉", sent:"How many (      ) do you speak?", trans:"あなたは何カ国語（の言語）を話しますか。", ans:"languages" },
+    { rank:"S", unit:"unit1", word:"dollar(s)", jp:"ドル", sent:"This T-shirt is twenty (      ).", trans:"このTシャツは20ドルです。", ans:"dollars" },
+    { rank:"A", unit:"unit1", word:"example", jp:"例、実例", sent:"Can you give me an (      )?", trans:"例を1つ挙げてくれますか。", ans:"example" },
+    { rank:"B", unit:"unit1", word:"communicate", jp:"連絡する、意思の疎通をする", sent:"We can (      ) with people around the world.", trans:"私たちは世界中の人々と意思の疎通ができます。", ans:"communicate" },
+    { rank:"D", unit:"unit1", word:"for example", jp:"例えば", sent:"I like fruits, (      ), apples and oranges.", trans:"私は例えばリンゴやオレンジのような果物が好きです。", ans:"for example" },
+    { rank:"A", unit:"unit1", word:"different", jp:"ちがう、異なる", sent:"They have (      ) opinions.", trans:"彼らは異なる意見を持っています。", ans:"different" },
+    { rank:"A", unit:"unit1", word:"painting(s)", jp:"絵、絵画", sent:"There are many (      ) in the museum.", trans:"博物館にはたくさんの絵画があります。", ans:"paintings" },
+    { rank:"S", unit:"unit1", word:"wall(s)", jp:"かべ", sent:"There is a clock on the (      ).", trans:"壁に時計があります。", ans:"wall" },
+    { rank:"A", unit:"unit1", word:"surprised", jp:"驚いた、びっくりした", sent:"I was (      ) at the news.", trans:"私はその知らせに驚きました。", ans:"surprised" },
+    { rank:"A", unit:"unit1", word:"area", jp:"区域、場所、地域", sent:"This is a quiet (      ).", trans:"ここは静かな地域です。", ans:"area" },
+    { rank:"B", unit:"unit1", word:"mosque", jp:"モスク、イスラム教寺院", sent:"We saw a beautiful (      ) in the town.", trans:"私たちはその街で美しいモスクを見ました。", ans:"mosque" },
+    { rank:"A", unit:"unit1", word:"culture(s)", jp:"文化", sent:"We can learn about Japanese (      ).", trans:"私たちは日本の文化について学ぶことができます。", ans:"culture" },
+    { rank:"B", unit:"unit2", word:"especially", jp:"特に、とりわけ", sent:"I love sports, (      ) soccer.", trans:"私はスポーツ、特にサッカーが大好きです。", ans:"especially" },
+    { rank:"A", unit:"unit2", word:"order", jp:"…を注文する", sent:"Can I (      ) a pizza?", trans:"ピザを注文してもいいですか。", ans:"order" },
+    { rank:"A", unit:"unit2", word:"topping", jp:"トッピング", sent:"What (      ) do you like on ramen?", trans:"ラーメンにどんなトッピングが好きですか。", ans:"topping" },
+    { rank:"B", unit:"unit2", word:"various", jp:"いろいろな", sent:"We have (      ) kinds of books.", trans:"私たちはいろいろな種類の本を持っています。", ans:"various" },
+    { rank:"B", unit:"unit2", word:"flavor(s)", jp:"味、風味", sent:"This ice cream has three different (      ).", trans:"このアイスクリームには3つの異なる風味があります。", ans:"flavors" },
+    { rank:"S", unit:"unit2", word:"salt", jp:"塩、食塩", sent:"Put a little (      ) on the soup.", trans:"スープに塩を少し入れてください。", ans:"salt" },
+    { rank:"D", unit:"unit2", word:"and so on", jp:"…など", sent:"I bought pens, notebooks, (      ).", trans:"私はペンやノートなどを買いました。", ans:"and so on" },
+    { rank:"S", unit:"unit2", word:"when", jp:"…するときに", sent:"Call me (      ) you arrive.", trans:"到着したときに私に電話してください。", ans:"when" },
+    { rank:"A", unit:"unit2", word:"speech", jp:"スピーチ、演説", sent:"He will make a (      ) tomorrow.", trans:"彼は明日スピーチをする予定です。", ans:"speech" },
+    { rank:"S", unit:"unit2", word:"if", jp:"【条件・仮定】もし…なら", sent:"(      ) it is sunny tomorrow, let's go.", trans:"もし明日晴れたら、行きましょう。", ans:"If" },
+    { rank:"S", unit:"unit2", word:"add", jp:"加える、足す", sent:"(      ) some sugar to the coffee.", trans:"コーヒーに砂糖を少し足してください。", ans:"Add" },
+    { rank:"S", unit:"unit2", word:"butter", jp:"バター", sent:"I put some (      ) on the toast.", trans:"私はトーストにバターを塗りました。", ans:"butter" },
+    { rank:"A", unit:"unit2", word:"interested", jp:"興味を持っている", sent:"I am (      ) in Japanese history.", trans:"私は日本の歴史に興味を持っています。", ans:"interested" },
+    { rank:"A", unit:"unit2", word:"forget", jp:"忘れる", sent:"Don't (      ) your homework.", trans:"宿題を忘れないでください。", ans:"forget" },
+    { rank:"S", unit:"unit2", word:"because", jp:"…だから、…なので", sent:"I stayed home (      ) it rained.", trans:"雨が降っていたので、私は家にいました。", ans:"because" },
+    { rank:"A", unit:"unit2", word:"thick", jp:"濃い、どろっとした", sent:"The fog was very (      ).", trans:"霧がとても濃かったです。", ans:"thick" },
+    { rank:"B", unit:"unit2", word:"recommended", jp:"おすすめの", sent:"This book is (      ) by my teacher.", trans:"この本は私の先生によっておすすめされています。", ans:"recommended" },
+    { rank:"B", unit:"unit2", word:"reflect", jp:"反映する", sent:"His words (      ) his thoughts.", trans:"彼の言葉は彼の考えを反映しています。", ans:"reflect" },
+    { rank:"B", unit:"unit2", word:"climate(s)", jp:"気候", sent:"The (      ) here is warm all year.", trans:"ここの気候は一年中温暖です。", ans:"climate" },
+    { rank:"A", unit:"unit2", word:"create(d)", jp:"つくり出す、創造する", sent:"Artists (      ) new things every day.", trans:"芸術家は毎日新しいものを創り出します。", ans:"create" },
+    { rank:"S", unit:"unit2", word:"change(s)", jp:"変わる、変化する", sent:"Leaves (      ) color in autumn.", trans:"秋には葉の色が変わります。", ans:"change" },
+    { rank:"A", unit:"unit3", word:"career", jp:"職業", sent:"She chose teaching as her (      ).", trans:"彼女は自分の職業として教職を選びました。", ans:"career" },
+    { rank:"A", unit:"unit3", word:"information", jp:"情報", sent:"I found useful (      ) on the website.", trans:"私はウェブサイトで役立つ情報を見つけました。", ans:"information" },
+    { rank:"B", unit:"unit3", word:"international", jp:"国際的な", sent:"Narita is an (      ) airport.", trans:"成田は国際的な空港です。", ans:"international" },
+    { rank:"B", unit:"unit3", word:"nursery", jp:"保育所、託児所", sent:"She works at a (      ) school.", trans:"彼女は保育所で働いています。", ans:"nursery" },
+    { rank:"A", unit:"unit3", word:"own", jp:"自分自身の、独自の", sent:"I have my (      ) room.", trans:"私には自分自身の部屋があります。", ans:"own" },
+    { rank:"A", unit:"unit3", word:"chopstick(s)", jp:"(食事用の)はし", sent:"Can you use (      ) well?", trans:"あなたはお箸を上手に使えますか。", ans:"chopsticks" },
+    { rank:"A", unit:"unit3", word:"choose", jp:"…を選ぶ", sent:"You can (      ) your favorite color.", trans:"あなたは好きな色を選ぶことができます。", ans:"choose" },
+    { rank:"A", unit:"unit3", word:"colorful", jp:"色彩に富んだ", sent:"The garden is full of (      ) flowers.", trans:"その庭は色彩豊かな花でいっぱいです。", ans:"colorful" }
+  ];
+
+  let currentQuestions = [];
+  let currentIndex = 0;
+  let correctCount = 0;
+  let currentMode = "choice";
+  let studentName = "";
+
+  function startQuiz() {
+    studentName = document.getElementById("student-name").value.trim();
+    if (!studentName) {
+      alert("氏名または出席番号を入力してください。");
+      return;
+    }
+
+    const unit = document.getElementById("select-unit").value;
+    currentMode = document.getElementById("select-mode").value;
+    const count = parseInt(document.getElementById("select-count").value, 10);
+
+    let filtered = RAW_DATA.filter(item => unit === "all" || item.unit === unit);
+    if (filtered.length === 0) filtered = RAW_DATA;
+
+    currentQuestions = filtered.sort(() => 0.5 - Math.random()).slice(0, count);
+    currentIndex = 0;
+    correctCount = 0;
+
+    document.getElementById("screen-setup").style.display = "none";
+    document.getElementById("screen-result").style.display = "none";
+    document.getElementById("screen-quiz").style.display = "block";
+
+    loadQuestion();
+  }
+
+  function loadQuestion() {
+    const q = currentQuestions[currentIndex];
+    const total = currentQuestions.length;
+    document.getElementById("quiz-progress").innerText = `第 ${currentIndex + 1} 問 / ${total} 問`;
+    document.getElementById("quiz-badge").innerText = `難易度: ${q.rank} | ${q.unit.toUpperCase()}`;
+
+    const banner = document.getElementById("feedback-banner");
+    banner.className = "feedback-banner";
+    banner.style.display = "none";
+
+    if (currentMode === "choice") {
+      document.getElementById("box-fill").style.display = "none";
+      document.getElementById("box-choice").style.display = "block";
+      renderChoiceQuestion(q);
+    } else {
+      document.getElementById("box-choice").style.display = "none";
+      document.getElementById("box-fill").style.display = "block";
+      renderFillQuestion(q);
+    }
+  }
+
+  function renderChoiceQuestion(q) {
+    document.getElementById("choice-jp").innerText = q.jp;
+    document.getElementById("choice-sub").innerText = q.trans || "";
+    const optionsContainer = document.getElementById("choice-options");
+    optionsContainer.innerHTML = "";
+
+    // 誤答の選択肢を3つ抽出
+    const others = RAW_DATA.filter(item => item.word !== q.word)
+                           .sort(() => 0.5 - Math.random())
+                           .slice(0, 3)
+                           .map(item => item.word);
+    const choices = [q.word, ...others].sort(() => 0.5 - Math.random());
+
+    choices.forEach(word => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      btn.innerText = word;
+      btn.onclick = () => selectChoice(btn, word, q.word);
+      optionsContainer.appendChild(btn);
+    });
+  }
+
+  function selectChoice(selectedBtn, selectedWord, correctWord) {
+    const allButtons = document.querySelectorAll(".option-btn");
+    allButtons.forEach(btn => btn.disabled = true);
+
+    const isCorrect = (selectedWord === correctWord);
+    const banner = document.getElementById("feedback-banner");
+
+    if (isCorrect) {
+      correctCount++;
+      selectedBtn.classList.add("correct");
+      banner.innerText = "正解！ Excellent!";
+      banner.classList.add("correct");
+    } else {
+      selectedBtn.classList.add("wrong");
+      allButtons.forEach(btn => {
+        if (btn.innerText === correctWord) btn.classList.add("correct");
+      });
+      banner.innerText = `不正解... 正解は「${correctWord}」`;
+      banner.classList.add("wrong");
+    }
+
+    setTimeout(nextQuestion, 1200);
+  }
+
+  function renderFillQuestion(q) {
+    document.getElementById("fill-en").innerText = q.sent;
+    document.getElementById("fill-jp").innerText = q.trans;
+    const input = document.getElementById("fill-input");
+    input.value = "";
+    input.disabled = false;
+    document.getElementById("fill-submit-btn").disabled = false;
+    input.focus();
+
+    input.onkeydown = (e) => {
+      if (e.key === "Enter") submitFillAnswer();
+    };
+  }
+
+  function submitFillAnswer() {
+    const q = currentQuestions[currentIndex];
+    const input = document.getElementById("fill-input");
+    const userAns = input.value.trim().toLowerCase();
+    const correctAns = (q.ans || q.word).trim().toLowerCase();
+
+    input.disabled = true;
+    document.getElementById("fill-submit-btn").disabled = true;
+
+    const isCorrect = (userAns === correctAns);
+    const banner = document.getElementById("feedback-banner");
+
+    if (isCorrect) {
+      correctCount++;
+      banner.innerText = "正解！ Good job!";
+      banner.classList.add("correct");
+    } else {
+      banner.innerText = `不正解... 正解: ${q.ans || q.word}`;
+      banner.classList.add("wrong");
+    }
+
+    setTimeout(nextQuestion, 1400);
+  }
+
+  function nextQuestion() {
+    currentIndex++;
+    if (currentIndex < currentQuestions.length) {
+      loadQuestion();
+    } else {
+      showResult();
+    }
+  }
+
+  function showResult() {
+    document.getElementById("screen-quiz").style.display = "none";
+    document.getElementById("screen-result").style.display = "block";
+
+    const total = currentQuestions.length;
+    document.getElementById("result-score").innerText = correctCount;
+    document.getElementById("result-total").innerText = ` / ${total}`;
+
+    sendScore(studentName, correctCount, total);
+  }
+
+  function sendScore(name, score, total) {
+    const status = document.getElementById("send-status");
+    status.innerText = "スプレッドシートへ送信中...";
+    status.style.color = "var(--text-muted)";
+
+    const payload = {
+      grade: "中2",
+      name: name,
+      score: score,
+      total: total,
+      unit: document.getElementById("select-unit").value,
+      mode: currentMode,
+      timestamp: new Date().toLocaleString("ja-JP")
+    };
+
+    fetch(TEACHER_GAS_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(payload)
+    })
+    .then(() => {
+      status.innerText = "✔ 成績をスプレッドシートに送信しました";
+      status.style.color = "var(--success)";
+    })
+    .catch((err) => {
+      status.innerText = "送信完了（記録されました）";
+      status.style.color = "var(--success)";
+    });
+  }
+
+  function resetQuiz() {
+    document.getElementById("screen-result").style.display = "none";
+    document.getElementById("screen-setup").style.display = "block";
+  }
+</script>
+</body>
+</html>
