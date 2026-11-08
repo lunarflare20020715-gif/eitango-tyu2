@@ -1832,14 +1832,17 @@
       }, 2500);
     }
   </script>
-  <script>
-  // 中2用GAS URLを直接固定
+ <script>
+  // 中2用スプレッドシートへの送信先を強制固定
   (function() {
-    const TARGET_URL = "https://script.google.com/macros/s/AKfycby08qZs4C9a5NTHu1NkPXbVV8xuFZNaRGkeWZtu2-u9sPGXdlD3Cz5zHzqxUmy-83pt/exec";
+    const TARGET_GAS_URL = "https://script.google.com/macros/s/AKfycby08qZs4C9a5NTHu1NkPXbVV8xuFZNaRGkeWZtu2-u9sPGXdlD3Cz5zHzqxUmy-83pt/exec";
     try {
-      localStorage.setItem('m2_gas_url', TARGET_URL);
-      localStorage.setItem('gas_url', TARGET_URL);
+      localStorage.setItem('m2_gas_url', TARGET_GAS_URL);
+      localStorage.setItem('gas_url', TARGET_GAS_URL);
+      localStorage.setItem('DEFAULT_GAS_URL', TARGET_GAS_URL);
     } catch(e) {}
+    window.gasUrl = TARGET_GAS_URL;
+    window.DEFAULT_GAS_URL = TARGET_GAS_URL;
   })();
 </script>
 </body>
